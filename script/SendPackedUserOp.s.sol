@@ -3,6 +3,5 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-import {MinimalAccount} from "../src/ethereum/MinimalAccount.sol";
 
-contract DeployMinimal is Script {}
+import {MinimalAccount} from "../src/ethereum/MinimalAccount.sol";
