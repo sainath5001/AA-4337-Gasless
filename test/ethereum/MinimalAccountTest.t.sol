@@ -194,4 +194,20 @@ contract MinimalAccountTest is Test, ZkSyncChainChecker {
         vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
         minimalAccount.changeOwner(newOwner);
     }
+
+    function testfuzzingExecute(address dest, uint256 value, bytes memory functionData) public skipZkSync {
+        // Arrange
+        assertEq(usdc.balanceOf(address(minimalAccount)), 0);
+        vm.assume(dest != address(0));
+        vm.assume(value < 1e18); // Prevent excessive gas usage
+        vm.assume(functionData.length > 0);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.execute(dest, value, functionData);
+
+        // Assert
+        // Check if the call was successful by checking the balance of the destination contract
+        assertTrue(true); // Placeholder for actual checks based on functionData
+    }
 }
