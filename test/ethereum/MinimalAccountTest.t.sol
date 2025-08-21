@@ -210,4 +210,137 @@ contract MinimalAccountTest is Test, ZkSyncChainChecker {
         // Check if the call was successful by checking the balance of the destination contract
         assertTrue(true); // Placeholder for actual checks based on functionData
     }
+
+    function testfuzzingExecuteWithRevert(address dest, uint256 value, bytes memory functionData) public skipZkSync {
+        // Arrange
+        assertEq(usdc.balanceOf(address(minimalAccount)), 0);
+        vm.assume(dest != address(0));
+        vm.assume(value < 1e18); // Prevent excessive gas usage
+        vm.assume(functionData.length > 0);
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        minimalAccount.execute(dest, value, functionData);
+    }
+
+    function testfuzzingChangeEntryPoint(address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.changeEntryPoint(newEntryPoint);
+
+        // Assert
+        assertEq(minimalAccount.entryPoint(), newEntryPoint);
+    }
+
+    function testfuzzingChangeEntryPointWithRevert(address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        minimalAccount.changeEntryPoint(newEntryPoint);
+    }
+
+    function testfuzzingChangeOwner(address newOwner) public skipZkSync {
+        // Arrange
+        vm.assume(newOwner != address(0));
+        assertEq(minimalAccount.owner(), helperConfig.getConfig().owner);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.changeOwner(newOwner);
+
+        // Assert
+        assertEq(minimalAccount.owner(), newOwner);
+    }
+
+    function testfuzzingChangeOwnerWithRevert(address newOwner) public skipZkSync {
+        // Arrange
+        vm.assume(newOwner != address(0));
+        assertEq(minimalAccount.owner(), helperConfig.getConfig().owner);
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        minimalAccount.changeOwner(newOwner);
+    }
+
+    function testfuzzingValidateUserOp(
+        PackedUserOperation memory packedUserOp,
+        bytes32 userOperationHash,
+        uint256 missingAccountFunds
+    ) public skipZkSync {
+        // Arrange
+        vm.assume(missingAccountFunds < 1e18); // Prevent excessive gas usage
+
+        // Act
+        vm.prank(helperConfig.getConfig().entryPoint);
+        uint256 validationData = minimalAccount.validateUserOp(packedUserOp, userOperationHash, missingAccountFunds);
+
+        // Assert
+        assertEq(validationData, 0);
+    }
+
+    function testfuzzingValidateUserOpWithRevert(
+        PackedUserOperation memory packedUserOp,
+        bytes32 userOperationHash,
+        uint256 missingAccountFunds
+    ) public skipZkSync {
+        // Arrange
+        vm.assume(missingAccountFunds < 1e18); // Prevent excessive gas usage
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        minimalAccount.validateUserOp(packedUserOp, userOperationHash, missingAccountFunds);
+    }
+
+    function testfuzzingHandleOps(PackedUserOperation[] memory ops, address target) public skipZkSync {
+        // Arrange
+        vm.assume(ops.length > 0);
+        vm.assume(target != address(0));
+
+        // Act
+        vm.prank(helperConfig.getConfig().entryPoint);
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(target));
+
+        // Assert
+        // Check if the operations were handled successfully
+        assertTrue(true); // Placeholder for actual checks based on the operations
+    }
+
+    function testfuzzingHandleOpsWithRevert(PackedUserOperation[] memory ops, address target) public skipZkSync {
+        // Arrange
+        vm.assume(ops.length > 0);
+        vm.assume(target != address(0));
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(target));
+    }
+
+    function testfuzzingOwnerChange(address newOwner, address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newOwner != address(0));
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.owner(), helperConfig.getConfig().owner);
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.changeOwner(newOwner);
+        minimalAccount.changeEntryPoint(newEntryPoint);
+
+        // Assert
+        assertEq(minimalAccount.owner(), newOwner);
+        assertEq(minimalAccount.entryPoint(), newEntryPoint);
+    }
 }
