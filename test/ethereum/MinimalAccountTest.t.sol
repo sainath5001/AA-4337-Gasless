@@ -343,4 +343,41 @@ contract MinimalAccountTest is Test, ZkSyncChainChecker {
         assertEq(minimalAccount.owner(), newOwner);
         assertEq(minimalAccount.entryPoint(), newEntryPoint);
     }
+
+    function testfuzzingChangeEntryPoint(address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.changeEntryPoint(newEntryPoint);
+
+        // Assert
+        assertEq(minimalAccount.entryPoint(), newEntryPoint);
+    }
+
+    function testfuzzingChangeEntryPoint(address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(minimalAccount.owner());
+        minimalAccount.changeEntryPoint(newEntryPoint);
+
+        // Assert
+        assertEq(minimalAccount.entryPoint(), newEntryPoint);
+    }
+
+    function testfuzzingChangeEntryPointWithRevert(address newEntryPoint) public skipZkSync {
+        // Arrange
+        vm.assume(newEntryPoint != address(0));
+        assertEq(minimalAccount.entryPoint(), helperConfig.getConfig().entryPoint);
+
+        // Act
+        vm.prank(randomuser);
+        vm.expectRevert(MinimalAccount.MinimalAccount__NotFromEntryPointOrOwner.selector);
+        minimalAccount.changeEntryPoint(newEntryPoint);
+    }
 }
